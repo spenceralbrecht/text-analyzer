@@ -19,9 +19,16 @@ Future<List<Conversation>>_getConversations() async {
     List<SmsThread> threads = await query.getAllThreads;
     for (var i=0; i<threads.length; i++) {
         String phoneNumber = threads[i].address;
+        String phoneNumberWithoutCC = phoneNumber;
+        // Remove the country codes
+        if (phoneNumber.length > 10) {
+//            print(phoneNumber)
+            phoneNumberWithoutCC = phoneNumber.split('').reversed.join().substring(0, 10).split('').reversed.join();
+        }
 
         List<SmsMessage> sentMessages = await query.querySms(address: phoneNumber, kinds: [SmsQueryKind.Sent]);
-        List<SmsMessage> receivedMessages = await query.querySms(address: phoneNumber, kinds: [SmsQueryKind.Inbox]);
+        List<SmsMessage> receivedMessages = await query.querySms(address: phoneNumberWithoutCC, kinds: [SmsQueryKind.Inbox]);
+//        List<SmsMessage> receivedMessages = await query.querySms(address: phoneNumber, kinds: [SmsQueryKind.Inbox]);
 
         ContactQuery contactQuery = new ContactQuery();
         Contact contact = await contactQuery.queryContact(phoneNumber);
