@@ -29,51 +29,10 @@ Future<Map<Contact, List<SmsMessage>>>_getMessages() async {
 //      messages.forEach((m) => print(m.body));
 //    }
     }
-
-
-//  for (var i=0; i < messages.length; i++) {
-//    SmsMessage message = messages[i];
-//    String phoneNumber = message.address;
-//    if (contactMap.containsKey(phoneNumber)) {
-////      if (phoneNumber == '8176370103') {
-////      if (phoneNumber == '9092476022') {
-////        print(message.body);
-////      }
-//      contactMap[phoneNumber].add(message);
-//    }
-//    else {
-//      contactMap[phoneNumber] = new List<SmsMessage>();
-//    }
-//  }
-//  void iterateMapEntry(key, value) async {
-//    // Check if I have more than 10 messages with this person
-//    if (value.length < 10) {
-//      contactMap.remove(key);
-//    }
-//  }
-
-//  contactMap.forEach(iterateMapEntry);
     contactMap.removeWhere((key, value) => value.length < 10);
     return contactMap;
-
-//  var contactNumbers = contactMap.keys.toList();
-//  List<String> contactNames = new List<String>();
-//  for (var i=0; i<contactNumbers.length; i++) {
-//    Contact contact = await contacts.queryContact(contactNumbers[i]);
-//    contactNames.add(contact.fullName);
-//  }
-
-//  List<String> contactNames = contactNumbers.map((number) => contacts.queryContact(number).toString()).toList();
-//  print(contactNames);
-//  return contactNames;
-//  return contactMap;
-//  print(contactMap.keys);
 }
 
-getTilesForContacts(contactMap) {
-    List<Widget> tiles = new List<ListTile>();
-
-}
 
 class MyApp extends StatelessWidget {
     @override
@@ -114,33 +73,35 @@ class MyApp extends StatelessWidget {
         List<String> numbers = contacts.map((contact) => contact.address).toList();
         List<int> numChatMessages = contacts.map((contact) => contactMap[contact].length).toList();
 
-        List<Person> people = new List<Person>();
-        for (var i=0; i<names.length; i++) {
-            people.add(new Person(names[i], numbers[i], numChatMessages[i]));
-        }
+        List<Conversation> chats = new List<Conversation>();
+        contactMap.forEach((contact, messageHistory) => chats.add(new Conversation(contact, messageHistory)));
+
+
+//        for (var i=0; i<names.length; i++) {
+//            chats.add(new Conversation(names[i], numbers[i], numChatMessages[i], contactMap[numbers[i]]));
+//        }
 
 //    .sort((a, b) => a.id.compareTo(b.id));
-        people.sort((a, b) => b.numMessages.compareTo(a.numMessages));
-        people.forEach((person) => print(person.numMessages));
+        chats.sort((a, b) => b.chatHistory.length.compareTo(a.chatHistory.length));
 //    values.forEach((contact) => (contact.fullName));
 //    map((name) => name.fullName);
         return new ListView.builder(
 //      padding: EdgeInsets.all(8.0),
-            itemCount: people.length,
+            itemCount: chats.length,
 //      itemExtent: 20.0,
             itemBuilder: (BuildContext context, int index) {
                 return new Column(
                     children: <Widget>[
                         new ListTile(
                             title: new Text(
-                                people[index].name,
+                                chats[index].contact.fullName,
                                 style: TextStyle(fontWeight: FontWeight.w600),
                                 textScaleFactor: 1.5,
                             ),
                             trailing: new Column(
                                 children: <Widget>[
                                     Text(
-                                        people[index].numMessages.toString(),
+                                        chats[index].chatHistory.length.toString(),
                                         style: TextStyle(fontWeight: FontWeight.w600),
                                         textScaleFactor: 1.4,
                                     ),
@@ -151,7 +112,13 @@ class MyApp extends StatelessWidget {
                                 ],
                             ),
                             contentPadding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                            onTap: () { /* react to the tile being tapped */ },
+                            onTap: () {
+                                Navigator.of(context).push(
+                                    new MaterialPageRoute(builder: (context) {
+                                        return new SecondScreen(chats[index]);
+                                    })
+                                );
+                            },
 
                         ),
                         new Divider(
@@ -164,11 +131,28 @@ class MyApp extends StatelessWidget {
     }
 }
 
-class Person {
-    String name;
-    String number;
-    int numMessages;
+class Conversation {
+//    String name;
+//    String number;
+//    int numMessages;
+    Contact contact;
+    List<SmsMessage> chatHistory;
 
-    Person(this.name, this.number, this.numMessages) {}
+    Conversation(this.contact, this.chatHistory) {}
+}
 
+class SecondScreen extends StatelessWidget {
+    Conversation conversation;
+
+    SecondScreen(this.conversation) {}
+
+    @override
+    Widget build (BuildContext ctxt) {
+        return new Scaffold(
+            appBar: new AppBar(
+                title: new Text("Conversation Details"),
+            ),
+            body: new Text(this.conversation.chatHistory.length.toString()),
+        );
+    }
 }
