@@ -113,22 +113,36 @@ class MyApp extends StatelessWidget {
     List<String> names = contacts.map((contact) => contact.fullName).toList();
     List<String> numbers = contacts.map((contact) => contact.address).toList();
     List<int> numChatMessages = contacts.map((contact) => contactMap[contact].length).toList();
+
+    List<Person> people = new List<Person>();
+    for (var i=0; i<names.length; i++) {
+      people.add(new Person(names[i], numbers[i], numChatMessages[i]));
+    }
+
+//    .sort((a, b) => a.id.compareTo(b.id));
+    people.sort((a, b) => b.numMessages.compareTo(a.numMessages));
+    people.forEach((person) => print(person.numMessages));
 //    values.forEach((contact) => (contact.fullName));
 //    map((name) => name.fullName);
     return new ListView.builder(
 //      padding: EdgeInsets.all(8.0),
-      itemCount: names.length,
+      itemCount: people.length,
 //      itemExtent: 20.0,
       itemBuilder: (BuildContext context, int index) {
         return new Column(
           children: <Widget>[
             new ListTile(
               title: new Text(
-                  names[index],
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  people[index].name,
+                  style: TextStyle(fontWeight: FontWeight.w600),
                   textScaleFactor: 1.5,
               ),
-              subtitle: new Text(numbers[index]),
+              subtitle: new Text(people[index].number),
+              trailing: new Text(
+                people[index].numMessages.toString(),
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                  textScaleFactor: 1.4,
+              ),
             ),
             new Divider(
               height: 2.0,
@@ -138,4 +152,13 @@ class MyApp extends StatelessWidget {
       },
     );
   }
+}
+
+class Person {
+  String name;
+  String number;
+  int numMessages;
+
+  Person(this.name, this.number, this.numMessages) {}
+
 }
