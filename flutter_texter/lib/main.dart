@@ -15,11 +15,6 @@ sendText(number, message) {
 Future<List<Conversation>>_getConversations() async {
 
     SmsQuery query = new SmsQuery();
-//    List<SmsMessage> myMessages = await query.querySms(address: '8176370103', kinds: [SmsQueryKind.Sent]);
-//    List<SmsMessage> theirMessages = await query.querySms(address: '8176370103', kinds: [SmsQueryKind.Inbox]);
-//    myMessages.forEach((m) => print(m.body));
-
-//    var contactMap = new Map<Contact, List<SmsMessage>>();
     List<Conversation> allConversations = new List<Conversation>();
     List<SmsThread> threads = await query.getAllThreads;
     for (var i=0; i<threads.length; i++) {
@@ -140,9 +135,6 @@ class MyApp extends StatelessWidget {
 }
 
 class Conversation {
-//    String name;
-//    String number;
-//    int numMessages;
     Contact contact;
     List<SmsMessage> sentMessages;
     List<SmsMessage> receivedMessages;
