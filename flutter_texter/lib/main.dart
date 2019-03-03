@@ -65,20 +65,40 @@ class MyApp extends StatelessWidget {
                builder: (BuildContext context, AsyncSnapshot snapshot) {
                  switch (snapshot.connectionState) {
                    case ConnectionState.none:
-                     return Text('Press button to start.');
                    case ConnectionState.active:
                    case ConnectionState.waiting:
-                     return Text('Awaiting result...');
+                     return Text('Loading...');
                    case ConnectionState.done:
                      if (snapshot.hasError)
                        return Text('Error: ${snapshot.error}');
-                     return Text('Result: ${snapshot.data}');
+                     return createListView(context, snapshot);
                  }
                  return null; // unreachable
                },
           )
         ),
       ),
+    );
+  }
+
+  Widget createListView(BuildContext context, AsyncSnapshot snapshot) {
+    List<String> values = snapshot.data;
+    return new ListView.builder(
+//      padding: EdgeInsets.all(8.0),
+      itemCount: values.length,
+//      itemExtent: 20.0,
+      itemBuilder: (BuildContext context, int index) {
+        return new Column(
+          children: <Widget>[
+            new ListTile(
+              title: new Text(values[index]),
+            ),
+            new Divider(
+              height: 2.0,
+            )
+          ],
+        );
+      },
     );
   }
 }
