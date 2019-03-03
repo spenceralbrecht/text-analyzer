@@ -44,6 +44,23 @@ class MyApp extends StatelessWidget {
     Widget build(BuildContext context) {
         return new MaterialApp(
             title: 'Text Analyzer',
+            theme: ThemeData(
+                // Define the default Brightness and Colors
+                brightness: Brightness.light,
+                primaryColor: Colors.black,
+                accentColor: Colors.black26,
+
+                // Define the default Font Family
+                fontFamily: 'Montserrat',
+
+                // Define the default TextTheme. Use this to specify the default
+                // text styling for headlines, titles, bodies of text, and more.
+                textTheme: TextTheme(
+                    headline: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
+                    title: TextStyle(fontSize: 36.0, fontStyle: FontStyle.italic),
+                    body1: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
+                ),
+            ),
             home: new Scaffold(
                 appBar: new AppBar(
                     title: Text('Contacts'),
@@ -71,22 +88,6 @@ class MyApp extends StatelessWidget {
     }
 
     Widget createListView(BuildContext context, AsyncSnapshot snapshot) {
-//    List<String> values = snapshot.data;
-//        Map<Contact, List<SmsMessage>> contactMap = snapshot.data;
-//        List<Contact> contacts = contactMap.keys.toList();
-//        List<String> names = contacts.map((contact) => contact.fullName).toList();
-//        List<String> numbers = contacts.map((contact) => contact.address).toList();
-//        List<int> numChatMessages = contacts.map((contact) => contactMap[contact].length).toList();
-//
-//        List<Conversation> chats = new List<Conversation>();
-//        contactMap.forEach((contact, messageHistory) => chats.add(new Conversation(contact, messageHistory)));
-
-
-//        for (var i=0; i<names.length; i++) {
-//            chats.add(new Conversation(names[i], numbers[i], numChatMessages[i], contactMap[numbers[i]]));
-//        }
-
-//    .sort((a, b) => a.id.compareTo(b.id));
         List<Conversation> chats = snapshot.data;
 
         chats.sort((a, b) => (b.sentMessages.length+b.receivedMessages.length).compareTo(a.sentMessages.length+a.receivedMessages.length));
