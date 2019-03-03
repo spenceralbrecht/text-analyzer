@@ -25,11 +25,14 @@ Future<List<Conversation>>_getConversations() async {
 
         ContactQuery contactQuery = new ContactQuery();
         Contact contact = await contactQuery.queryContact(phoneNumber);
+        if (contact.fullName == null) {
+            contact.fullName= contact.address;
+        }
         Conversation conversation = new Conversation(contact, sentMessages, receivedMessages);
         allConversations.add(conversation);
 
     }
-    allConversations.removeWhere((conv) => conv.sentMessages.length < 10);
+    allConversations.removeWhere((conv) => conv.sentMessages.length < 3);
     return allConversations;
 }
 
