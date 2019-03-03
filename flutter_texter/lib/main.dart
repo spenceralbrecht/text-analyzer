@@ -12,25 +12,30 @@ sendText(number, message) {
     sender.sendSms(new SmsMessage(address, message));
 }
 
-Future<Map<Contact, List<SmsMessage>>>_getMessages() async {
+Future<List<Conversation>>_getConversations() async {
 
     SmsQuery query = new SmsQuery();
-    var contactMap = new Map<Contact, List<SmsMessage>>();
+//    List<SmsMessage> myMessages = await query.querySms(address: '8176370103', kinds: [SmsQueryKind.Sent]);
+//    List<SmsMessage> theirMessages = await query.querySms(address: '8176370103', kinds: [SmsQueryKind.Inbox]);
+//    myMessages.forEach((m) => print(m.body));
+
+//    var contactMap = new Map<Contact, List<SmsMessage>>();
+    List<Conversation> allConversations = new List<Conversation>();
     List<SmsThread> threads = await query.getAllThreads;
     for (var i=0; i<threads.length; i++) {
         String phoneNumber = threads[i].address;
+
+        List<SmsMessage> sentMessages = await query.querySms(address: phoneNumber, kinds: [SmsQueryKind.Sent]);
+        List<SmsMessage> receivedMessages = await query.querySms(address: phoneNumber, kinds: [SmsQueryKind.Inbox]);
+
         ContactQuery contactQuery = new ContactQuery();
         Contact contact = await contactQuery.queryContact(phoneNumber);
-        contactMap[contact] = (threads[i].messages);
+        Conversation conversation = new Conversation(contact, sentMessages, receivedMessages);
+        allConversations.add(conversation);
 
-        // Print messages for a specific number
-//    if (contact.address == '9499107853') {
-//      List<SmsMessage> messages = contactMap[contact];
-//      messages.forEach((m) => print(m.body));
-//    }
     }
-    contactMap.removeWhere((key, value) => value.length < 10);
-    return contactMap;
+    allConversations.removeWhere((conv) => conv.sentMessages.length < 10);
+    return allConversations;
 }
 
 
@@ -45,7 +50,7 @@ class MyApp extends StatelessWidget {
                 ),
                 body: Center(
                   child: new FutureBuilder(
-                      future: _getMessages(), // a previously-obtained Future<String> or null
+                      future: _getConversations(), // a previously-obtained Future<String> or null
                       builder: (BuildContext context, AsyncSnapshot snapshot) {
                           switch (snapshot.connectionState) {
                               case ConnectionState.none:
@@ -67,14 +72,14 @@ class MyApp extends StatelessWidget {
 
     Widget createListView(BuildContext context, AsyncSnapshot snapshot) {
 //    List<String> values = snapshot.data;
-        Map<Contact, List<SmsMessage>> contactMap = snapshot.data;
-        List<Contact> contacts = contactMap.keys.toList();
-        List<String> names = contacts.map((contact) => contact.fullName).toList();
-        List<String> numbers = contacts.map((contact) => contact.address).toList();
-        List<int> numChatMessages = contacts.map((contact) => contactMap[contact].length).toList();
-
-        List<Conversation> chats = new List<Conversation>();
-        contactMap.forEach((contact, messageHistory) => chats.add(new Conversation(contact, messageHistory)));
+//        Map<Contact, List<SmsMessage>> contactMap = snapshot.data;
+//        List<Contact> contacts = contactMap.keys.toList();
+//        List<String> names = contacts.map((contact) => contact.fullName).toList();
+//        List<String> numbers = contacts.map((contact) => contact.address).toList();
+//        List<int> numChatMessages = contacts.map((contact) => contactMap[contact].length).toList();
+//
+//        List<Conversation> chats = new List<Conversation>();
+//        contactMap.forEach((contact, messageHistory) => chats.add(new Conversation(contact, messageHistory)));
 
 
 //        for (var i=0; i<names.length; i++) {
@@ -82,7 +87,9 @@ class MyApp extends StatelessWidget {
 //        }
 
 //    .sort((a, b) => a.id.compareTo(b.id));
-        chats.sort((a, b) => b.chatHistory.length.compareTo(a.chatHistory.length));
+        List<Conversation> chats = snapshot.data;
+
+        chats.sort((a, b) => (b.sentMessages.length+b.receivedMessages.length).compareTo(a.sentMessages.length+a.receivedMessages.length));
 //    values.forEach((contact) => (contact.fullName));
 //    map((name) => name.fullName);
         return new ListView.builder(
@@ -101,7 +108,7 @@ class MyApp extends StatelessWidget {
                             trailing: new Column(
                                 children: <Widget>[
                                     Text(
-                                        chats[index].chatHistory.length.toString(),
+                                        (chats[index].sentMessages.length+chats[index].receivedMessages.length).toString(),
                                         style: TextStyle(fontWeight: FontWeight.w600),
                                         textScaleFactor: 1.4,
                                     ),
@@ -136,9 +143,10 @@ class Conversation {
 //    String number;
 //    int numMessages;
     Contact contact;
-    List<SmsMessage> chatHistory;
+    List<SmsMessage> sentMessages;
+    List<SmsMessage> receivedMessages;
 
-    Conversation(this.contact, this.chatHistory) {}
+    Conversation(this.contact, this.sentMessages, this.receivedMessages) {}
 }
 
 class SecondScreen extends StatelessWidget {
@@ -154,7 +162,7 @@ class SecondScreen extends StatelessWidget {
           ),
           body: Center(
               child: new FutureBuilder(
-                  future: _getGraphData(this.conversation), // a previously-obtained Future<String> or null
+                  future: _createMetricsObject(this.conversation), // a previously-obtained Future<String> or null
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
                       switch (snapshot.connectionState) {
                           case ConnectionState.none:
@@ -174,23 +182,109 @@ class SecondScreen extends StatelessWidget {
     }
 }
 
-Future<String>_getGraphData(Conversation conversation) async {
-    return "Yeah baby";
+Future<TextMetric>_createMetricsObject(Conversation conversation) async {
+    TextMetric metric = new TextMetric();
+    metric.name = conversation.contact.fullName;
+    metric.totalMessages = conversation.sentMessages.length+conversation.receivedMessages.length;
+    metric.textingSince = getFirstMessageDate(conversation.sentMessages);
+    metric.numMessagesYouSent = conversation.sentMessages.length;
+    metric.numMessagesTheySent = conversation.receivedMessages.length;
+    return metric;
+}
+
+//int getYourMessageCount(Conversation conversation) {
+//    List<SmsMessage> chatHistory = conversation.chatHistory;
+//    int count = 0;
+//    SmsMessage message;
+//    for (int i=0; i < chatHistory.length; i++) {
+//        message = chatHistory[i];
+//        print(message.sender.toString());
+////        print('sender = '+message.address.toString() + ' address = '+conversation.contact.address.toString());
+//        if (message.sender.toString() != conversation.contact.address.toString()) {
+////            print(message.body);
+//            count++;
+////            print(count);
+//        }
+//    }
+//    return count;
+//}
+
+String getFirstMessageDate(List<SmsMessage> chatHistory) {
+    String day = chatHistory.last.date.day.toString();
+    String month = chatHistory.last.date.month.toString();
+    String year = chatHistory.last.date.year.toString();
+    return '$month-$day-$year';
+}
+
+class TextMetric {
+    String name;
+    String textingSince;
+    int totalMessages;
+    int numMessagesYouSent;
+    int numMessagesTheySent;
+    int yourAvgMessageLength;
+    int theirAvgMessageLength;
 }
 
 Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
+    TextMetric metric = snapshot.data;
     return GridView.count(
         primary: false,
         padding: const EdgeInsets.all(20.0),
         crossAxisSpacing: 10.0,
         crossAxisCount: 2,
         children: <Widget>[
-            const Text('He\'d have you all unravel at the'),
-            const Text('Heed not the rabble'),
-            const Text('Sound of screams but the'),
-            const Text('Who scream'),
-            const Text('Revolution is coming...'),
-            const Text('Revolution, they...'),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.name,
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 2.0,
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.textingSince,
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.4,
+                    ),
+                    Text(
+                        'first message sent',
+                        style: TextStyle(fontWeight: FontWeight.w300),
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.numMessagesYouSent.toString(),
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.4,
+                    ),
+                    Text(
+                        'messages you sent',
+                        style: TextStyle(fontWeight: FontWeight.w300),
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.numMessagesTheySent.toString(),
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.4,
+                    ),
+                    Text(
+                        'messages they sent',
+                        style: TextStyle(fontWeight: FontWeight.w300),
+                    ),
+                ],
+            ),
+//            Text(metric.numMessagesTheySent.toString()),
+            Text('Revolution is coming...'),
+            Text('Revolution, they...'),
         ],
     );
 }
