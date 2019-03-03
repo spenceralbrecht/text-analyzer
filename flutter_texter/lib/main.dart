@@ -114,9 +114,9 @@ class MyApp extends StatelessWidget {
                             contentPadding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
                             onTap: () {
                                 Navigator.of(context).push(
-                                    new MaterialPageRoute(builder: (context) {
-                                        return new SecondScreen(chats[index]);
-                                    })
+                                  new MaterialPageRoute(builder: (context) {
+                                      return new SecondScreen(chats[index]);
+                                  })
                                 );
                             },
 
@@ -149,10 +149,48 @@ class SecondScreen extends StatelessWidget {
     @override
     Widget build (BuildContext ctxt) {
         return new Scaffold(
-            appBar: new AppBar(
-                title: new Text("Conversation Details"),
-            ),
-            body: new Text(this.conversation.chatHistory.length.toString()),
+          appBar: new AppBar(
+              title: new Text("Conversation Details"),
+          ),
+          body: Center(
+              child: new FutureBuilder(
+                  future: _getGraphData(this.conversation), // a previously-obtained Future<String> or null
+                  builder: (BuildContext context, AsyncSnapshot snapshot) {
+                      switch (snapshot.connectionState) {
+                          case ConnectionState.none:
+                          case ConnectionState.active:
+                          case ConnectionState.waiting:
+                              return Text('Loading...');
+                          case ConnectionState.done:
+                              if (snapshot.hasError)
+                                  return Text('Error: ${snapshot.error}');
+                              return createDashboard(context, snapshot);;
+                      }
+                      return null; // unreachable
+                  },
+              ),
+          )
         );
     }
+}
+
+Future<String>_getGraphData(Conversation conversation) async {
+    return "Yeah baby";
+}
+
+Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
+    return GridView.count(
+        primary: false,
+        padding: const EdgeInsets.all(20.0),
+        crossAxisSpacing: 10.0,
+        crossAxisCount: 2,
+        children: <Widget>[
+            const Text('He\'d have you all unravel at the'),
+            const Text('Heed not the rabble'),
+            const Text('Sound of screams but the'),
+            const Text('Who scream'),
+            const Text('Revolution is coming...'),
+            const Text('Revolution, they...'),
+        ],
+    );
 }
