@@ -233,13 +233,77 @@ Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
         padding: const EdgeInsets.all(20.0),
         crossAxisSpacing: 10.0,
         crossAxisCount: 2,
+//        childAspectRatio: 2.0,
         children: <Widget>[
             new Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                    Text(
+                        'You',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 2.0,
+                    ),
+                ],
+            ),
+            new Column(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                     Text(
                         metric.name,
                         style: TextStyle(fontWeight: FontWeight.w600),
                         textScaleFactor: 2.0,
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.numMessagesYouSent.toString(),
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.4,
+                    ),
+                    Text(
+                        'messages sent',
+                        style: TextStyle(fontWeight: FontWeight.w300),
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.numMessagesTheySent.toString(),
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.4,
+                    ),
+                    Text(
+                        'messages sent',
+                        style: TextStyle(fontWeight: FontWeight.w300),
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.yourAvgMessageLength.toString(),
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.4,
+                    ),
+                    Text(
+                        'average message length',
+                        style: TextStyle(fontWeight: FontWeight.w300),
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.theirAvgMessageLength.toString(),
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.4,
+                    ),
+                    Text(
+                        'average message length',
+                        style: TextStyle(fontWeight: FontWeight.w300),
                     ),
                 ],
             ),
@@ -256,35 +320,6 @@ Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
                     ),
                 ],
             ),
-            new Column(
-                children: <Widget>[
-                    Text(
-                        metric.numMessagesYouSent.toString(),
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                        textScaleFactor: 1.4,
-                    ),
-                    Text(
-                        'messages you sent',
-                        style: TextStyle(fontWeight: FontWeight.w300),
-                    ),
-                ],
-            ),
-            new Column(
-                children: <Widget>[
-                    Text(
-                        metric.numMessagesTheySent.toString(),
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                        textScaleFactor: 1.4,
-                    ),
-                    Text(
-                        'messages they sent',
-                        style: TextStyle(fontWeight: FontWeight.w300),
-                    ),
-                ],
-            ),
-//            Text(metric.numMessagesTheySent.toString()),
-            Text('Revolution is coming...'),
-            Text('Revolution, they...'),
         ],
     );
 }
