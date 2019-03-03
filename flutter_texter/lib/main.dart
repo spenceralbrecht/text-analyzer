@@ -56,7 +56,7 @@ class MyApp extends StatelessWidget {
                               case ConnectionState.none:
                               case ConnectionState.active:
                               case ConnectionState.waiting:
-                                  return Text('Loading...');
+                                  return CircularProgressIndicator(semanticsLabel: 'Analyzing Messages',);
                               case ConnectionState.done:
                                   if (snapshot.hasError)
                                       return Text('Error: ${snapshot.error}');
@@ -168,7 +168,7 @@ class SecondScreen extends StatelessWidget {
                           case ConnectionState.none:
                           case ConnectionState.active:
                           case ConnectionState.waiting:
-                              return Text('Loading...');
+                              return CircularProgressIndicator();
                           case ConnectionState.done:
                               if (snapshot.hasError)
                                   return Text('Error: ${snapshot.error}');
@@ -189,25 +189,16 @@ Future<TextMetric>_createMetricsObject(Conversation conversation) async {
     metric.textingSince = getFirstMessageDate(conversation.sentMessages);
     metric.numMessagesYouSent = conversation.sentMessages.length;
     metric.numMessagesTheySent = conversation.receivedMessages.length;
+    metric.yourAvgMessageLength = getAverageMessageLength(conversation.sentMessages);
+    metric.theirAvgMessageLength = getAverageMessageLength(conversation.receivedMessages);
     return metric;
 }
 
-//int getYourMessageCount(Conversation conversation) {
-//    List<SmsMessage> chatHistory = conversation.chatHistory;
-//    int count = 0;
-//    SmsMessage message;
-//    for (int i=0; i < chatHistory.length; i++) {
-//        message = chatHistory[i];
-//        print(message.sender.toString());
-////        print('sender = '+message.address.toString() + ' address = '+conversation.contact.address.toString());
-//        if (message.sender.toString() != conversation.contact.address.toString()) {
-////            print(message.body);
-//            count++;
-////            print(count);
-//        }
-//    }
-//    return count;
-//}
+int getAverageMessageLength(List<SmsMessage> messages) {
+    var totalLength = 0;
+    messages.forEach((message) => totalLength+=message.body.length);
+    return totalLength~/messages.length;
+}
 
 String getFirstMessageDate(List<SmsMessage> chatHistory) {
     String day = chatHistory.last.date.day.toString();
@@ -231,7 +222,7 @@ Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
     return GridView.count(
         primary: false,
         padding: const EdgeInsets.all(20.0),
-        crossAxisSpacing: 10.0,
+        crossAxisSpacing: 5.0,
         crossAxisCount: 2,
 //        childAspectRatio: 2.0,
         children: <Widget>[
@@ -242,6 +233,7 @@ Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
                         'You',
                         style: TextStyle(fontWeight: FontWeight.w600),
                         textScaleFactor: 2.0,
+                        textAlign: TextAlign.center,
                     ),
                 ],
             ),
@@ -252,6 +244,33 @@ Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
                         metric.name,
                         style: TextStyle(fontWeight: FontWeight.w600),
                         textScaleFactor: 2.0,
+                        textAlign: TextAlign.center,
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.textingSince,
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.8,
+                    ),
+                    Text(
+                        'first message sent',
+                        style: TextStyle(fontWeight: FontWeight.w300),
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.totalMessages.toString(),
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.8,
+                    ),
+                    Text(
+                        'total messages',
+                        style: TextStyle(fontWeight: FontWeight.w300),
                     ),
                 ],
             ),
@@ -260,7 +279,7 @@ Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
                     Text(
                         metric.numMessagesYouSent.toString(),
                         style: TextStyle(fontWeight: FontWeight.w600),
-                        textScaleFactor: 1.4,
+                        textScaleFactor: 1.8,
                     ),
                     Text(
                         'messages sent',
@@ -273,7 +292,7 @@ Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
                     Text(
                         metric.numMessagesTheySent.toString(),
                         style: TextStyle(fontWeight: FontWeight.w600),
-                        textScaleFactor: 1.4,
+                        textScaleFactor: 1.8,
                     ),
                     Text(
                         'messages sent',
@@ -284,9 +303,9 @@ Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
             new Column(
                 children: <Widget>[
                     Text(
-                        metric.yourAvgMessageLength.toString(),
+                        metric.yourAvgMessageLength.toString()+' characters',
                         style: TextStyle(fontWeight: FontWeight.w600),
-                        textScaleFactor: 1.4,
+                        textScaleFactor: 1.8,
                     ),
                     Text(
                         'average message length',
@@ -297,25 +316,12 @@ Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
             new Column(
                 children: <Widget>[
                     Text(
-                        metric.theirAvgMessageLength.toString(),
+                        metric.theirAvgMessageLength.toString()+' characters',
                         style: TextStyle(fontWeight: FontWeight.w600),
-                        textScaleFactor: 1.4,
+                        textScaleFactor: 1.8,
                     ),
                     Text(
                         'average message length',
-                        style: TextStyle(fontWeight: FontWeight.w300),
-                    ),
-                ],
-            ),
-            new Column(
-                children: <Widget>[
-                    Text(
-                        metric.textingSince,
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                        textScaleFactor: 1.4,
-                    ),
-                    Text(
-                        'first message sent',
                         style: TextStyle(fontWeight: FontWeight.w300),
                     ),
                 ],
