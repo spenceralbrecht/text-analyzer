@@ -49,6 +49,7 @@ class MyApp extends StatelessWidget {
     Widget build(BuildContext context) {
         return new MaterialApp(
             title: 'Text Analyzer',
+            debugShowCheckedModeBanner: false,
             theme: ThemeData(
                 // Define the default Brightness and Colors
                 brightness: Brightness.light,
@@ -192,8 +193,38 @@ Future<TextMetric>_createMetricsObject(Conversation conversation) async {
     metric.textingSince = getFirstMessageDate(conversation.sentMessages);
     metric.numMessagesYouSent = conversation.sentMessages.length;
     metric.numMessagesTheySent = conversation.receivedMessages.length;
-    metric.yourAvgMessageLength = getAverageMessageLength(conversation.sentMessages);
-    metric.theirAvgMessageLength = getAverageMessageLength(conversation.receivedMessages);
+//    calculateConversationMetrics(metric, conversation);
+    metric = calculateConversationMetrics(metric, conversation);
+//    metric.yourAvgMessageLength = getAverageMessageLength(conversation.sentMessages);
+//    metric.theirAvgMessageLength = getAverageMessageLength(conversation.receivedMessages);
+    return metric;
+}
+
+TextMetric calculateConversationMetrics(TextMetric metric, Conversation conversation) {
+
+    int yourTotalMessageLength = 0;
+    int theirTotalMessageLength = 0;
+
+    // Calculate stats about your messages
+    for (int i=0; i < conversation.sentMessages.length; i++) {
+        yourTotalMessageLength += conversation.sentMessages[i].body.length;
+        List<String> messageWords = conversation.sentMessages[i].body.trim().split(" ");
+        if (messageWords.length == 1 && messageWords[0].length < 10) {
+            metric.yourOneWordReplies++;
+        }
+    }
+    metric.yourAvgMessageLength = yourTotalMessageLength~/conversation.sentMessages.length;
+
+    // Calculate stats about their messages
+    for (int i=0; i < conversation.receivedMessages.length; i++) {
+        theirTotalMessageLength += conversation.receivedMessages[i].body.length;
+        List<String> messageWords = conversation.receivedMessages[i].body.trim().split(" ");
+        if (messageWords.length == 1 && messageWords[0].length < 10) {
+            metric.theirOneWordReplies++;
+        }
+    }
+    metric.theirAvgMessageLength = theirTotalMessageLength~/conversation.receivedMessages.length;
+
     return metric;
 }
 
@@ -218,6 +249,19 @@ class TextMetric {
     int numMessagesTheySent;
     int yourAvgMessageLength;
     int theirAvgMessageLength;
+    int yourOneWordReplies;
+    int theirOneWordReplies;
+
+    TextMetric() {
+        this.totalMessages = 0;
+        this.yourAvgMessageLength = 0;
+        this.theirAvgMessageLength = 0;
+        this.yourOneWordReplies = 0;
+        this.theirOneWordReplies = 0;
+        this.theirAvgMessageLength = 0;
+        this.numMessagesYouSent = 0;
+        this.numMessagesTheySent = 0;
+    }
 }
 
 Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
@@ -325,6 +369,32 @@ Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
                     ),
                     Text(
                         'average message length',
+                        style: TextStyle(fontWeight: FontWeight.w300),
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.yourOneWordReplies.toString(),
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.8,
+                    ),
+                    Text(
+                        'one word replies',
+                        style: TextStyle(fontWeight: FontWeight.w300),
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.theirOneWordReplies.toString(),
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.8,
+                    ),
+                    Text(
+                        'one word replies',
                         style: TextStyle(fontWeight: FontWeight.w300),
                     ),
                 ],
