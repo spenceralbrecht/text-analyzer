@@ -200,10 +200,91 @@ Future<TextMetric>_createMetricsObject(Conversation conversation) async {
     return metric;
 }
 
+SmsMessage getNextMessageAfterTime(DateTime timeOfLastMessage, List<SmsMessage> messages) {
+    for (int i=messages.length-1; i>=0; i--) {
+        SmsMessage current = messages[i];
+        if (current.date.compareTo(timeOfLastMessage) > 0) {
+            return current;
+        }
+    }
+    return null;
+}
+
 TextMetric calculateConversationMetrics(TextMetric metric, Conversation conversation) {
 
     int yourTotalMessageLength = 0;
     int theirTotalMessageLength = 0;
+    int totalMessagePairs = 0;
+    Duration theirTotalResponseTime = new Duration();
+    Duration yourTotalResponseTime = new Duration();
+
+
+
+    // Calculate average response times
+    int indexOfYourMessage = 0;
+    int indexOfTheirMessage = 0;
+    SmsMessage yourMessage = conversation.sentMessages.last;
+    SmsMessage theirMessage = conversation.receivedMessages.last;
+
+//    Duration difference = yourMessage.date.difference(theirMessage.date).abs();
+//
+//    // Duration will be negative
+//    if (yourMessage.date.isBefore(theirMessage.date)) {
+//        theirTotalResponseTime = theirTotalResponseTime + difference;
+//    }
+//    // Duration will be positive
+//    else {
+//        yourTotalResponseTime = yourTotalResponseTime + difference;
+//    }
+//    totalMessagePairs++;
+
+//    print('first message from you '+yourMessage.body.toString());
+//    print('first message from them '+theirMessage.body.toString());
+
+
+    while (yourMessage != null && theirMessage != null) {
+        Duration difference = yourMessage.date.difference(theirMessage.date).abs();
+
+        // Duration will be negative
+        if (yourMessage.date.isBefore(theirMessage.date)) {
+
+            // Only count responses that come in within 10 hours of the last message
+            if (difference.compareTo(new Duration(hours: 10)) < 0) {
+                print('they took '+difference.toString()+' minutes to respond');
+                theirTotalResponseTime += difference;
+            }
+            yourMessage = getNextMessageAfterTime(theirMessage.date, conversation.sentMessages);
+            if (yourMessage != null) {
+//                print('your next message = '+yourMessage.body.toString());
+            }
+        }
+        // Duration will be positive
+        else {
+            // Only count responses that come in within 10 hours of the last message
+            if (difference.compareTo(new Duration(hours: 10)) < 0) {
+                print('you took '+difference.toString()+' minutes to respond');
+                yourTotalResponseTime += difference;
+            }
+//            yourTotalResponseTime += difference;
+            theirMessage = getNextMessageAfterTime(yourMessage.date, conversation.receivedMessages);
+            if (theirMessage != null) {
+//                print('their next message = '+theirMessage.body.toString());
+            }
+        }
+        totalMessagePairs++;
+    }
+    print(totalMessagePairs);
+
+    metric.theirAvgResponseTime = theirTotalResponseTime.inMinutes.toInt()~/(totalMessagePairs~/2);
+    metric.yourAvgResponseTime = yourTotalResponseTime.inMinutes.toInt()~/(totalMessagePairs~/2);
+
+
+//    print(yourFirstMessage.date.toString());
+//    print(theirFirstMessage.date.toString());
+
+//    while (indexOfYourMessage < conversation.sentMessages.length && indexOfTheirMessage < conversation.receivedMessages.length) {
+//
+//    }
 
     // Calculate stats about your messages
     for (int i=0; i < conversation.sentMessages.length; i++) {
@@ -251,6 +332,8 @@ class TextMetric {
     int theirAvgMessageLength;
     int yourOneWordReplies;
     int theirOneWordReplies;
+    int yourAvgResponseTime;
+    int theirAvgResponseTime;
 
     TextMetric() {
         this.totalMessages = 0;
@@ -261,6 +344,8 @@ class TextMetric {
         this.theirAvgMessageLength = 0;
         this.numMessagesYouSent = 0;
         this.numMessagesTheySent = 0;
+        this.yourAvgResponseTime = 0;
+        this.theirAvgResponseTime = 0;
     }
 }
 
@@ -369,6 +454,32 @@ Widget createDashboard(BuildContext context, AsyncSnapshot snapshot) {
                     ),
                     Text(
                         'average message length',
+                        style: TextStyle(fontWeight: FontWeight.w300),
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.yourAvgResponseTime.toString()+ ' minutes',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.8,
+                    ),
+                    Text(
+                        'avg. response time',
+                        style: TextStyle(fontWeight: FontWeight.w300),
+                    ),
+                ],
+            ),
+            new Column(
+                children: <Widget>[
+                    Text(
+                        metric.theirAvgResponseTime.toString()+ ' minutes',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        textScaleFactor: 1.8,
+                    ),
+                    Text(
+                        'avg. response time',
                         style: TextStyle(fontWeight: FontWeight.w300),
                     ),
                 ],
